@@ -1,0 +1,26 @@
+{
+  "name": "bunker-csv",
+  "version": "1.0.0",
+  "description": "Solution for massive processing of CSV files, with automated ingestion and database persistence.",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "tsx watch src/server.ts"
+  },
+  "author": "Hilquias Ferreira Melo",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "devDependencies": {
+    "@types/node": "^24.0.1",
+    "prisma": "^6.9.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@fastify/cors": "^11.0.1",
+    "@prisma/client": "^6.9.0",
+    "dotenv": "^16.5.0",
+    "fastify": "^5.4.0",
+    "zod": "^3.25.64"
+  }
+}

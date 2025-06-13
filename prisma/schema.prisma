@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model Lawyers {
+  id                    String    @id @default(uuid())
+  name                  String
+  cpf                   String    @unique
+  oab                   String    @unique
+  email                 String    @unique
+  birth                 String
+  telephone             String
+  informations_accepted DateTime?
+  registered            DateTime?
+  role                  Role      @default(MEMBER)
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now())
+
+  @@map("lawyers")
+}
