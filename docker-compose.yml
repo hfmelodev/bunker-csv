@@ -1,0 +1,15 @@
+services:
+  bunker-csv:
+    container_name: bunker-csv
+    image: bitnami/postgresql:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRESQL_USERNAME=bunker
+      - POSTGRESQL_PASSWORD=bunker
+      - POSTGRESQL_DATABASE=db-bunker
+    volumes:
+      - postgres-data:/bitnami/postgresql
+
+volumes:
+  postgres-data:

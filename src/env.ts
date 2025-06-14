@@ -4,6 +4,8 @@ import { z } from 'zod'
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(3333),
+  API_PROTHEUS_DATA: z.string().url(),
+  API_PROTHEUS_ST: z.string().url(),
 })
 
 const _env = envSchema.safeParse(process.env)
