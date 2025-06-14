@@ -6,15 +6,17 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { API_PROTHEUS_DATA, API_PROTHEUS_ST } from '../../lib/axios'
 import type { LawyersInterface } from '../../repositories/interfaces/lawyers'
+import { asyncPool } from '../../utils/async-pool'
 
 interface CreateLawyersServiceRequest {
   file: MultipartFile | undefined
 }
 
 interface CreateLawyersServiceResponse {
-  totalLawyers: number
-  totalInserted: number
-  totalNotInserted: number
+  totalRegisters: number
+  totalRegisteredLawyersInGoodStanding: number
+  totalUnregisteredLawyersInBadStanding: number
+  totalInvalidCpfLawyers: number
 }
 
 interface LawyersProps {
@@ -59,10 +61,30 @@ export class CreateLawyersService {
 
     const lawyers: LawyersProps[] = []
 
-    let totalNotInserted = 0
-    let totalInserted = 0
+    let totalRegisteredLawyersInGoodStanding = 0
+    let totalUnregisteredLawyersInBadStanding = 0
+    let totalInvalidCpfLawyers = 0
 
+    const cpfs = []
+
+    // Filtra CPFs válidos, removendo espaços, linhas vazias e que tenham exatamente 11 caracteres
     for await (const cpf of lawyersLine) {
+      const cleanCpf = cpf.trim()
+      if (cleanCpf.length !== 11) {
+        totalInvalidCpfLawyers++
+      }
+
+      if (cleanCpf && cleanCpf.length === 11) {
+        cpfs.push(cleanCpf)
+      }
+    }
+
+    // Executa chamadas na API com limite de 5 requisições simultâneas
+    await asyncPool(5, cpfs, async cpf => {
+      const lawyer = await this.lawyersInterface.findByCpf(cpf)
+
+      if (lawyer) return
+
       const { data } = await API_PROTHEUS_DATA<LawyersPropsApi>('/', {
         params: {
           idOrg: 10,
@@ -82,13 +104,13 @@ export class CreateLawyersService {
         informations_accepted: dayjs().utc().toDate(),
         registered: dayjs().utc().toDate(),
       })
-    }
+    })
 
     for await (const { name, cpf, oab, birth, email, telephone, informations_accepted, registered } of lawyers) {
       const { data } = await API_PROTHEUS_ST<boolean>(`/${cpf}`)
 
       if (data === false) {
-        totalNotInserted += 1
+        totalUnregisteredLawyersInBadStanding += 1
         continue
       }
 
@@ -107,13 +129,14 @@ export class CreateLawyersService {
         registered,
       })
 
-      totalInserted += 1
+      totalRegisteredLawyersInGoodStanding += 1
     }
 
     return {
-      totalLawyers: lawyers.length, // Total found in CSV
-      totalInserted, // Total of compliant individuals inserted in the database
-      totalNotInserted, // Total not inserted (rejected by Protheus)
+      totalRegisters: cpfs.length + totalInvalidCpfLawyers, // Total found in CSV
+      totalRegisteredLawyersInGoodStanding, // Total of compliant individuals inserted in the database
+      totalUnregisteredLawyersInBadStanding, // Total not inserted (rejected by Protheus)
+      totalInvalidCpfLawyers, // Total of invalid CPFs
     }
   }
 }

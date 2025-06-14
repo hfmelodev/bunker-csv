@@ -4,7 +4,9 @@ import fastify from 'fastify'
 import { ZodError } from 'zod'
 import { appRouter } from './http/routes'
 
-export const app = fastify()
+export const app = fastify({
+  connectionTimeout: 5000000, // 5 minutes
+})
 
 app.register(fastifyCors)
 app.register(fastifyMultipart)

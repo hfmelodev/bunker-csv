@@ -11,17 +11,25 @@ export async function createLawyersController(request: FastifyRequest, reply: Fa
 
     const registerLawyersUseCase = new CreateLawyersService(prismaLawyersRepository)
 
-    const { totalLawyers, totalInserted, totalNotInserted } = await registerLawyersUseCase.execute({
+    const {
+      totalRegisters,
+      totalRegisteredLawyersInGoodStanding,
+      totalUnregisteredLawyersInBadStanding,
+      totalInvalidCpfLawyers,
+    } = await registerLawyersUseCase.execute({
       file,
     })
 
     return reply.status(201).send({
-      totalLawyers,
-      totalInserted,
-      totalNotInserted,
+      totalRegisters,
+      totalRegisteredLawyersInGoodStanding,
+      totalUnregisteredLawyersInBadStanding,
+      totalInvalidCpfLawyers,
     })
   } catch (err) {
     if (err instanceof AxiosError) {
+      console.log(err)
+
       return reply.status(404).send({
         message: 'Lawyer not found or inconsistent data. Try again.',
       })
